@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rectilinear Motion</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> <!-- Plotly library -->
+</head>
+<body>
+
+<div id="positionPlot"></div>
+<div id="velocityPlot"></div>
+
+<script>
+// Define the differential equation for rectilinear motion (constant acceleration)
+function rectilinearMotion(t, x) {
+    let x0 = x[0];
+    let v0 = x[1];
+    let a = 2.0; // Constant acceleration (you can change this value)
+    let dxdt = [v0, a]; // First derivative of position is velocity, and of velocity is acceleration
+    return dxdt;
+}
+
+// Time points
+let t = [];
+for (let i = 0; i <= 10; i += 0.01) { // Time from 0 to 10 seconds with 1000 points
+    t.push(i);
+}
+
+// Initial conditions [initial position, initial velocity]
+let x0 = [0, 10]; // Starting at position 0 with an initial velocity of 10 m/s
+// Solve the differential equation using Euler's method
+function solveMotion() {
+    let dt = 0.01;
+    let x = [];
+    x.push(x0);
+
+    for (let i = 1; i < t.length; i++) {
+        let x_n = x[i - 1];
+        let k1 = rectilinearMotion(t[i - 1], x_n);
+        let k2 = rectilinearMotion(t[i - 1] + dt / 2, [x_n[0] + (dt / 2) * k1[0], x_n[1] + (dt / 2) * k1[1]]);
+        let k3 = rectilinearMotion(t[i - 1] + dt / 2, [x_n[0] + (dt / 2) * k2[0], x_n[1] + (dt / 2) * k2[1]]);
+        let k4 = rectilinearMotion(t[i], [x_n[0] + dt * k3[0], x_n[1] + dt * k3[1]]);
+
+        let newX = [x_n[0] + (dt / 6) * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]),
+                    x_n[1] + (dt / 6) * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1])];
+        x.push(newX);
+    }
+
+    return x;
+}
+
+let motionData = solveMotion();
+
+// Extract position and velocity data for plotting
+let positionData = motionData.map(entry => entry[0]);
+let velocityData = motionData.map(entry => entry[1]);
+
+// Plot the position vs time
+let positionPlot = {
+    x: t,
+    y: positionData,
+    type: 'scatter',
+    mode: 'lines',
+    name: 'Position vs Time',
+    xaxis: { title: 'Time (s)' },
+    yaxis: { title: 'Position (m)' }
+};
+
+// Plot the velocity vs time
+let velocityPlot = {
+    x: t,
+    y: velocityData,
+    type: 'scatter',
+    mode: 'lines',
+    name: 'Velocity vs Time',
+    xaxis: { title: 'Time (s)' },
+    yaxis: { title: 'Velocity (m/s)' }
+};
+
+Plotly.newPlot('positionPlot', [positionPlot]);
+Plotly.newPlot('velocityPlot', [velocityPlot]);
+</script>
+
+</body>
+</html>
